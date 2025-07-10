@@ -1,4 +1,7 @@
-import express, { type Request, Response, NextFunction } from "express";
+import dotenv from "dotenv";
+dotenv.config();
+
+import express, { type Request, Response } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import nodemailer from "nodemailer";
@@ -24,14 +27,14 @@ app.post("/api/send-email", async (req: Request, res: Response) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "forexbasemedia@gmail.com",
-      pass: "bmrf ctng yhhj eezs", // ← use the actual Gmail app password
+      user: process.env.EMAIL_USER, // Gmail address
+      pass: process.env.EMAIL_PASS, // Gmail app password
     },
   });
 
   try {
     await transporter.sendMail({
-      from: `"Request Activation" <forexbasemedia@gmail.com>`,
+      from: `"Request Activation" <${process.env.EMAIL_USER}>`,
       to: "admin@pipblaster.xyz",
       subject: "New Bot Activation Request",
       text: `
@@ -51,14 +54,11 @@ ${requirements}
     res.status(200).json({ success: true, message: "Email sent!" });
   } catch (err) {
     console.error("Send error:", err);
-    res
-      .status(500)
-      .json({ success: false, message: "Email failed to send." });
+    res.status(500).json({ success: false, message: "Email failed to send." });
   }
 });
 
 (async () => {
-  // 🧠 Move this block inside async IIFE
   const port = 5000;
 
   if (app.get("env") === "development") {
